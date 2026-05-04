@@ -1,0 +1,26 @@
+{
+  "name": "xiaoai-codex-bridge",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Use a XiaoAi speaker as a voice interface for Codex: spoken summaries and voice replies.",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/start.js",
+    "say": "node src/say.js",
+    "notify": "node src/notify.js",
+    "migpt-listener": "node src/migpt-listener.js",
+    "xiaoai-listener": "node src/xiaoai-listener.js",
+    "codex-output-listener": "node src/codex-output-listener.js",
+    "reply-server": "node src/voice-reply-server.js",
+    "service:install": "bash scripts/install-launchd.sh",
+    "service:uninstall": "bash scripts/uninstall-launchd.sh",
+    "app:build": "bash scripts/build-menu-app.sh",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@mi-gpt/next": "^1.3.2",
+    "dotenv": "^16.4.7",
+    "xiaoai-tts": "^0.6.0"
+  }
+}
