@@ -43,11 +43,11 @@ Recommended opening:
 
 我把小爱音箱 mini 接进了 Codex 工作流。
 
-现在 Codex 写完代码，小爱会用 60 字左右播报结果；我说“小爱同学，回复 继续”，它会自动提交回 Codex。
+现在 Codex 写完代码，小爱会用 60 字左右播报结果；我说“小爱同学，回复 继续”，它会自动提交回 Codex。长回复也支持两段式：先说“回复”，再说具体内容。
 
 不是玩具，是一个真正能用的 hands-free AI coding loop。
 
-GitHub: <repo link>
+GitHub: https://github.com/chenchen1010/xiaoai-codex-bridge
 
 ## Suggested GitHub Topics
 

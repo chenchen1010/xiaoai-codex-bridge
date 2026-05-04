@@ -41,7 +41,7 @@ Codex 完成代码修改
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_NAME/xiaoai-codex-bridge.git
+git clone https://github.com/chenchen1010/xiaoai-codex-bridge.git
 cd xiaoai-codex-bridge
 npm install
 cp .env.example .env
@@ -112,6 +112,13 @@ More examples:
 XiaoAi may say “没听懂”. That is okay. The bridge reads XiaoAi's cloud recognition history; if Codex receives the text, the flow is working.
 
 For longer replies, XiaoAi may split the command into two recognition records: one record is only “回复”, and the next or previous record is the actual content. The bridge pairs nearby records within 3 minutes and submits the content to Codex. If XiaoAi only records “回复”, wait for the prompt, then say the content as a second voice command.
+
+Two-step long reply:
+
+```text
+小爱同学，回复
+小爱同学，你把最新改动更新一下文档然后提交到 GitHub
+```
 
 ## Spoken Summary
 
