@@ -12,6 +12,8 @@
   <string>6.0</string>
   <key>CFBundleName</key>
   <string>小爱Codex开关</string>
+  <key>CFBundleIconFile</key>
+  <string>xiaoai-codex</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>

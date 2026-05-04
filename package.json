@@ -15,6 +15,7 @@
     "reply-server": "node src/voice-reply-server.js",
     "service:install": "bash scripts/install-launchd.sh",
     "service:uninstall": "bash scripts/uninstall-launchd.sh",
+    "icons:build": "bash scripts/build-icons.sh",
     "app:build": "bash scripts/build-menu-app.sh",
     "typer:build": "bash scripts/build-typer-app.sh",
     "test": "node --test"

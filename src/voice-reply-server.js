@@ -15,6 +15,12 @@ const targetApp = process.env.VOICE_REPLY_TARGET_APP || "Codex";
 const submitDelayMs = Number.parseInt(process.env.VOICE_REPLY_SUBMIT_DELAY_MS || "300", 10);
 const typerApp = process.env.VOICE_REPLY_TYPER_APP;
 const logPath = path.join(rootDir, ".data", "replies.log");
+const serverLogPath = path.join(rootDir, ".data", "reply-server.log");
+
+async function log(message) {
+  await fs.mkdir(path.dirname(serverLogPath), { recursive: true });
+  await fs.appendFile(serverLogPath, `${new Date().toISOString()}\t${message}\n`);
+}
 
 async function readJson(req) {
   const chunks = [];
@@ -42,10 +48,16 @@ async function saveReply(text) {
   await fs.mkdir(path.dirname(logPath), { recursive: true });
   await fs.appendFile(logPath, `${new Date().toISOString()}\t${text}\n`);
   await run("pbcopy", [], text);
+  await log(`received ${text}`);
 
   if (replyMode === "paste" || replyMode === "submit") {
     if (typerApp && replyMode === "submit") {
-      await run(typerApp, [text], "");
+      if (typerApp.endsWith(".app")) {
+        await run("/usr/bin/open", ["-W", "-n", "-a", typerApp, "--args", text], "");
+      } else {
+        await run(typerApp, [text], "");
+      }
+      await log(`submitted via typer ${typerApp}`);
       return;
     }
 
@@ -60,6 +72,7 @@ async function saveReply(text) {
     }
 
     await run("osascript", script.flatMap((line) => ["-e", line]), "");
+    await log("submitted via osascript");
   }
 }
 

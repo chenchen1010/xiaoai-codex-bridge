@@ -7,8 +7,13 @@ APP_NAME="小爱Codex开关.app"
 APP_PATH="$HOME/Desktop/$APP_NAME"
 BUILD_DIR="$ROOT_DIR/.data/build"
 EXECUTABLE="小爱Codex开关"
+ICON="$ROOT_DIR/assets/xiaoai-codex.icns"
 
 mkdir -p "$BUILD_DIR" "$APP_PATH/Contents/MacOS" "$APP_PATH/Contents/Resources"
+
+if [ ! -f "$ICON" ]; then
+  bash "$ROOT_DIR/scripts/build-icons.sh"
+fi
 
 swiftc "$ROOT_DIR/macos-app/XiaoAiCodexSwitch.swift" \
   -o "$APP_PATH/Contents/MacOS/$EXECUTABLE" \
@@ -18,6 +23,7 @@ swiftc "$ROOT_DIR/macos-app/XiaoAiCodexSwitch.swift" \
 /usr/libexec/PlistBuddy -c "Clear dict" "$APP_PATH/Contents/Info.plist" 2>/dev/null || true
 cp "$ROOT_DIR/macos-app/Info.plist" "$APP_PATH/Contents/Info.plist"
 /usr/libexec/PlistBuddy -c "Add :XiaoAiBridgeRoot string $ROOT_DIR" "$APP_PATH/Contents/Info.plist"
+cp "$ICON" "$APP_PATH/Contents/Resources/xiaoai-codex.icns"
 echo "APPL????" > "$APP_PATH/Contents/PkgInfo"
 chmod +x "$APP_PATH/Contents/MacOS/$EXECUTABLE"
 
