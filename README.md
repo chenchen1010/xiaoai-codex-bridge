@@ -122,6 +122,8 @@ Two-step long reply:
 
 The first command only arms reply mode. XiaoAi stays quiet. The next recognized sentence within 3 minutes is submitted to Codex, then XiaoAi says “已发送到 Codex”.
 
+When you pause in the middle of a longer request, XiaoAi may create multiple recognition records. In Codex reply mode, the bridge collects those segments and sends them together after 12 seconds of silence. You can also say “发送”, “提交”, or “说完了” to send immediately.
+
 ## Spoken Summary
 
 The bridge does not read the whole screen aloud. It creates a short listening-friendly version.

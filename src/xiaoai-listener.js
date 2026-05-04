@@ -16,6 +16,7 @@ const prefix = process.env.XIAOAI_REPLY_PREFIX || process.env.MIGPT_REPLY_PREFIX
 const webhook = process.env.XIAOAI_REPLY_WEBHOOK || process.env.MIGPT_REPLY_WEBHOOK || `http://127.0.0.1:${process.env.VOICE_REPLY_PORT || "3337"}/reply`;
 const pollMs = Number.parseInt(process.env.XIAOAI_LISTENER_POLL_MS || "1500", 10);
 const commandPairWindowMs = Number.parseInt(process.env.XIAOAI_REPLY_PAIR_WINDOW_MS || "180000", 10);
+const collectIdleMs = Number.parseInt(process.env.XIAOAI_REPLY_COLLECT_IDLE_MS || "12000", 10);
 
 function cookieFromSession(session, device) {
   const parts = [
@@ -80,6 +81,10 @@ function isCodexArmCommand(reply) {
   return /^codex$/i.test(String(reply || "").replace(/\s+/g, "").trim());
 }
 
+function isSendCommand(text) {
+  return /^(发送|提交|发给codex|发给Codex|说完了|结束)$/i.test(String(text || "").replace(/\s+/g, "").trim());
+}
+
 const session = JSON.parse(await fs.readFile(sessionPath, "utf8"));
 const xiaoai = new XiaoAiTts(session);
 const device = await xiaoai.getDevice(process.env.XIAOAI_DEVICE_NAME);
@@ -90,6 +95,8 @@ if (!device) {
 
 let lastTime = 0;
 let pendingPrefixTime = 0;
+let pendingSegments = [];
+let pendingLastContentTime = 0;
 let recentNonCommand = null;
 let lastForwarded = null;
 const initialRecords = await fetchConversations(session, device, 1);
@@ -98,8 +105,28 @@ if (initialRecords[0]) lastTime = initialRecords[0].time;
 console.log(`xiaoai listener started: ${device.name} (${device.hardware})`);
 console.log(`voice command: "${prefix} 继续" -> ${webhook}`);
 
+async function flushPendingReply(triggerTime) {
+  const text = pendingSegments.join("，").trim();
+  pendingPrefixTime = 0;
+  pendingSegments = [];
+  pendingLastContentTime = 0;
+
+  if (!text) return;
+  if (lastForwarded && lastForwarded.text === text && triggerTime - lastForwarded.time <= commandPairWindowMs) return;
+
+  console.log(`flushed collected reply: ${text}`);
+  await forwardReply(text);
+  lastForwarded = { text, time: triggerTime };
+  await sayViaXiaoAi("已发送到 Codex");
+}
+
 setInterval(async () => {
   try {
+    const now = Date.now();
+    if (pendingSegments.length && now - pendingLastContentTime >= collectIdleMs) {
+      await flushPendingReply(now);
+    }
+
     const records = await fetchConversations(session, device, 5);
     const newRecords = records
       .filter((record) => record.time > lastTime)
@@ -114,12 +141,12 @@ setInterval(async () => {
         const withinPendingPrefix = pendingPrefixTime && record.time - pendingPrefixTime <= commandPairWindowMs;
 
         if (withinPendingPrefix) {
-          pendingPrefixTime = 0;
-          if (!lastForwarded || lastForwarded.text !== record.query || record.time - lastForwarded.time > commandPairWindowMs) {
-            console.log(`paired reply after prefix: ${record.query}`);
-            await forwardReply(record.query);
-            lastForwarded = { text: record.query, time: record.time };
-            await sayViaXiaoAi("已发送到 Codex");
+          if (isSendCommand(record.query)) {
+            await flushPendingReply(record.time);
+          } else {
+            pendingSegments.push(record.query);
+            pendingLastContentTime = record.time;
+            console.log(`collected reply segment: ${record.query}`);
           }
           continue;
         }
@@ -131,6 +158,8 @@ setInterval(async () => {
       if (isCodexArmCommand(reply)) {
         recentNonCommand = null;
         pendingPrefixTime = record.time;
+        pendingSegments = [];
+        pendingLastContentTime = 0;
         console.log("armed Codex reply mode");
         continue;
       }
@@ -142,6 +171,8 @@ setInterval(async () => {
         if (pairedPrevious) {
           recentNonCommand = null;
           pendingPrefixTime = 0;
+          pendingSegments = [];
+          pendingLastContentTime = 0;
           if (!lastForwarded || lastForwarded.text !== pairedPrevious.text || record.time - lastForwarded.time > commandPairWindowMs) {
             console.log(`paired previous reply: ${pairedPrevious.text}`);
             await forwardReply(pairedPrevious.text);
@@ -153,6 +184,8 @@ setInterval(async () => {
 
         if (isPrefixOnly(record.query)) {
           pendingPrefixTime = record.time;
+          pendingSegments = [];
+          pendingLastContentTime = 0;
           continue;
         }
 
@@ -161,6 +194,8 @@ setInterval(async () => {
       }
 
       pendingPrefixTime = 0;
+      pendingSegments = [];
+      pendingLastContentTime = 0;
       recentNonCommand = null;
       await forwardReply(reply);
       lastForwarded = { text: reply, time: record.time };
