@@ -15,6 +15,7 @@ const sessionPath = path.join(rootDir, process.env.XIAOAI_SESSION_PATH || ".data
 const prefix = process.env.XIAOAI_REPLY_PREFIX || process.env.MIGPT_REPLY_PREFIX || "回复";
 const webhook = process.env.XIAOAI_REPLY_WEBHOOK || process.env.MIGPT_REPLY_WEBHOOK || `http://127.0.0.1:${process.env.VOICE_REPLY_PORT || "3337"}/reply`;
 const pollMs = Number.parseInt(process.env.XIAOAI_LISTENER_POLL_MS || "1500", 10);
+const commandPairWindowMs = Number.parseInt(process.env.XIAOAI_REPLY_PAIR_WINDOW_MS || "12000", 10);
 
 function cookieFromSession(session, device) {
   const parts = [
@@ -71,6 +72,10 @@ function extractReply(text) {
   return spoken.replace(new RegExp(`^${prefix}[，,。\\s]*`), "").trim();
 }
 
+function isPrefixOnly(text) {
+  return new RegExp(`^${prefix}[，,。\\s]*$`).test(String(text || "").trim());
+}
+
 const session = JSON.parse(await fs.readFile(sessionPath, "utf8"));
 const xiaoai = new XiaoAiTts(session);
 const device = await xiaoai.getDevice(process.env.XIAOAI_DEVICE_NAME);
@@ -80,6 +85,9 @@ if (!device) {
 }
 
 let lastTime = 0;
+let pendingPrefixTime = 0;
+let recentNonCommand = null;
+let lastForwarded = null;
 const initialRecords = await fetchConversations(session, device, 1);
 if (initialRecords[0]) lastTime = initialRecords[0].time;
 
@@ -98,13 +106,51 @@ setInterval(async () => {
       const reply = extractReply(record.query);
       console.log(`heard: ${record.query}`);
 
-      if (reply === null) continue;
+      if (reply === null) {
+        const withinPendingPrefix = pendingPrefixTime && record.time - pendingPrefixTime <= commandPairWindowMs;
+
+        if (withinPendingPrefix) {
+          pendingPrefixTime = 0;
+          if (!lastForwarded || lastForwarded.text !== record.query || record.time - lastForwarded.time > commandPairWindowMs) {
+            await forwardReply(record.query);
+            lastForwarded = { text: record.query, time: record.time };
+            await sayViaXiaoAi("已发送到 Codex");
+          }
+          continue;
+        }
+
+        recentNonCommand = { text: record.query, time: record.time };
+        continue;
+      }
+
       if (!reply) {
+        const pairedPrevious =
+          recentNonCommand && record.time - recentNonCommand.time <= commandPairWindowMs ? recentNonCommand : null;
+
+        if (pairedPrevious) {
+          recentNonCommand = null;
+          pendingPrefixTime = 0;
+          if (!lastForwarded || lastForwarded.text !== pairedPrevious.text || record.time - lastForwarded.time > commandPairWindowMs) {
+            await forwardReply(pairedPrevious.text);
+            lastForwarded = { text: pairedPrevious.text, time: record.time };
+            await sayViaXiaoAi("已发送到 Codex");
+          }
+          continue;
+        }
+
+        if (isPrefixOnly(record.query)) {
+          pendingPrefixTime = record.time;
+          continue;
+        }
+
         await sayViaXiaoAi("你可以说，回复，然后说要发给 Codex 的内容。");
         continue;
       }
 
+      pendingPrefixTime = 0;
+      recentNonCommand = null;
       await forwardReply(reply);
+      lastForwarded = { text: reply, time: record.time };
       await sayViaXiaoAi("已发送到 Codex");
     }
   } catch (error) {
