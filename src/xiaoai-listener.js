@@ -76,6 +76,10 @@ function isPrefixOnly(text) {
   return new RegExp(`^${prefix}[，,。\\s]*$`).test(String(text || "").trim());
 }
 
+function isCodexArmCommand(reply) {
+  return /^codex$/i.test(String(reply || "").replace(/\s+/g, "").trim());
+}
+
 const session = JSON.parse(await fs.readFile(sessionPath, "utf8"));
 const xiaoai = new XiaoAiTts(session);
 const device = await xiaoai.getDevice(process.env.XIAOAI_DEVICE_NAME);
@@ -124,6 +128,13 @@ setInterval(async () => {
         continue;
       }
 
+      if (isCodexArmCommand(reply)) {
+        recentNonCommand = null;
+        pendingPrefixTime = record.time;
+        console.log("armed Codex reply mode");
+        continue;
+      }
+
       if (!reply) {
         const pairedPrevious =
           recentNonCommand && record.time - recentNonCommand.time <= commandPairWindowMs ? recentNonCommand : null;
@@ -142,7 +153,6 @@ setInterval(async () => {
 
         if (isPrefixOnly(record.query)) {
           pendingPrefixTime = record.time;
-          await sayViaXiaoAi("收到，请继续说要发给 Codex 的内容。");
           continue;
         }
 

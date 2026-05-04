@@ -116,9 +116,11 @@ For longer replies, XiaoAi may split the command into two recognition records: o
 Two-step long reply:
 
 ```text
-小爱同学，回复
+小爱同学，回复 Codex
 小爱同学，你把最新改动更新一下文档然后提交到 GitHub
 ```
+
+The first command only arms reply mode. XiaoAi stays quiet. The next recognized sentence within 3 minutes is submitted to Codex, then XiaoAi says “已发送到 Codex”.
 
 ## Spoken Summary
 
