@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+APP_NAME="小爱Codex输入助手.app"
+APP_PATH="$HOME/Desktop/$APP_NAME"
+EXECUTABLE="小爱Codex输入助手"
+
+mkdir -p "$APP_PATH/Contents/MacOS" "$APP_PATH/Contents/Resources"
+
+swiftc "$ROOT_DIR/macos-app/XiaoAiCodexTyper.swift" \
+  -o "$APP_PATH/Contents/MacOS/$EXECUTABLE" \
+  -framework AppKit \
+  -framework ApplicationServices \
+  -framework Foundation
+
+cat > "$APP_PATH/Contents/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleExecutable</key>
+  <string>$EXECUTABLE</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.burning.xiaoai-codex-typer</string>
+  <key>CFBundleName</key>
+  <string>$EXECUTABLE</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.0</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+  <key>LSUIElement</key>
+  <true/>
+</dict>
+</plist>
+PLIST
+
+echo "APPL????" > "$APP_PATH/Contents/PkgInfo"
+chmod +x "$APP_PATH/Contents/MacOS/$EXECUTABLE"
+xattr -cr "$APP_PATH"
+codesign --force --deep --sign - "$APP_PATH" >/dev/null 2>&1 || true
+
+echo "$APP_PATH"

@@ -13,6 +13,7 @@ const legacyAutoPaste = String(process.env.VOICE_REPLY_AUTO_PASTE || "false").to
 const replyMode = (process.env.VOICE_REPLY_MODE || (legacyAutoPaste ? "submit" : "clipboard")).toLowerCase();
 const targetApp = process.env.VOICE_REPLY_TARGET_APP || "Codex";
 const submitDelayMs = Number.parseInt(process.env.VOICE_REPLY_SUBMIT_DELAY_MS || "300", 10);
+const typerApp = process.env.VOICE_REPLY_TYPER_APP;
 const logPath = path.join(rootDir, ".data", "replies.log");
 
 async function readJson(req) {
@@ -43,6 +44,11 @@ async function saveReply(text) {
   await run("pbcopy", [], text);
 
   if (replyMode === "paste" || replyMode === "submit") {
+    if (typerApp && replyMode === "submit") {
+      await run(typerApp, [text], "");
+      return;
+    }
+
     const script = [
       `tell application "${targetApp}" to activate`,
       `delay ${Math.max(0, submitDelayMs) / 1000}`,

@@ -187,6 +187,18 @@ Build menu bar app:
 npm run app:build
 ```
 
+Build macOS input helper:
+
+```bash
+npm run typer:build
+```
+
+If auto-submit is blocked by macOS Accessibility permissions, grant Accessibility permission to `小爱Codex输入助手.app`, then set:
+
+```env
+VOICE_REPLY_TYPER_APP=/Users/you/Desktop/小爱Codex输入助手.app/Contents/MacOS/小爱Codex输入助手
+```
+
 ## Logs
 
 Background service:

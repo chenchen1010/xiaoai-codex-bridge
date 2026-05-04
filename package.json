@@ -16,6 +16,7 @@
     "service:install": "bash scripts/install-launchd.sh",
     "service:uninstall": "bash scripts/uninstall-launchd.sh",
     "app:build": "bash scripts/build-menu-app.sh",
+    "typer:build": "bash scripts/build-typer-app.sh",
     "test": "node --test"
   },
   "dependencies": {
