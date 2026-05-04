@@ -111,7 +111,7 @@ More examples:
 
 XiaoAi may say “没听懂”. That is okay. The bridge reads XiaoAi's cloud recognition history; if Codex receives the text, the flow is working.
 
-For longer replies, XiaoAi may split the command into two recognition records: one record is only “回复”, and the next or previous record is the actual content. The bridge pairs nearby records within 90 seconds and submits the content to Codex.
+For longer replies, XiaoAi may split the command into two recognition records: one record is only “回复”, and the next or previous record is the actual content. The bridge pairs nearby records within 3 minutes and submits the content to Codex. If XiaoAi only records “回复”, wait for the prompt, then say the content as a second voice command.
 
 ## Spoken Summary
 

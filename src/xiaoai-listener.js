@@ -15,7 +15,7 @@ const sessionPath = path.join(rootDir, process.env.XIAOAI_SESSION_PATH || ".data
 const prefix = process.env.XIAOAI_REPLY_PREFIX || process.env.MIGPT_REPLY_PREFIX || "回复";
 const webhook = process.env.XIAOAI_REPLY_WEBHOOK || process.env.MIGPT_REPLY_WEBHOOK || `http://127.0.0.1:${process.env.VOICE_REPLY_PORT || "3337"}/reply`;
 const pollMs = Number.parseInt(process.env.XIAOAI_LISTENER_POLL_MS || "1500", 10);
-const commandPairWindowMs = Number.parseInt(process.env.XIAOAI_REPLY_PAIR_WINDOW_MS || "90000", 10);
+const commandPairWindowMs = Number.parseInt(process.env.XIAOAI_REPLY_PAIR_WINDOW_MS || "180000", 10);
 
 function cookieFromSession(session, device) {
   const parts = [
@@ -142,6 +142,7 @@ setInterval(async () => {
 
         if (isPrefixOnly(record.query)) {
           pendingPrefixTime = record.time;
+          await sayViaXiaoAi("收到，请继续说要发给 Codex 的内容。");
           continue;
         }
 
