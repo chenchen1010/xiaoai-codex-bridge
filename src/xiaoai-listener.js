@@ -15,7 +15,7 @@ const sessionPath = path.join(rootDir, process.env.XIAOAI_SESSION_PATH || ".data
 const prefix = process.env.XIAOAI_REPLY_PREFIX || process.env.MIGPT_REPLY_PREFIX || "回复";
 const webhook = process.env.XIAOAI_REPLY_WEBHOOK || process.env.MIGPT_REPLY_WEBHOOK || `http://127.0.0.1:${process.env.VOICE_REPLY_PORT || "3337"}/reply`;
 const pollMs = Number.parseInt(process.env.XIAOAI_LISTENER_POLL_MS || "1500", 10);
-const commandPairWindowMs = Number.parseInt(process.env.XIAOAI_REPLY_PAIR_WINDOW_MS || "12000", 10);
+const commandPairWindowMs = Number.parseInt(process.env.XIAOAI_REPLY_PAIR_WINDOW_MS || "90000", 10);
 
 function cookieFromSession(session, device) {
   const parts = [
@@ -112,6 +112,7 @@ setInterval(async () => {
         if (withinPendingPrefix) {
           pendingPrefixTime = 0;
           if (!lastForwarded || lastForwarded.text !== record.query || record.time - lastForwarded.time > commandPairWindowMs) {
+            console.log(`paired reply after prefix: ${record.query}`);
             await forwardReply(record.query);
             lastForwarded = { text: record.query, time: record.time };
             await sayViaXiaoAi("已发送到 Codex");
@@ -131,6 +132,7 @@ setInterval(async () => {
           recentNonCommand = null;
           pendingPrefixTime = 0;
           if (!lastForwarded || lastForwarded.text !== pairedPrevious.text || record.time - lastForwarded.time > commandPairWindowMs) {
+            console.log(`paired previous reply: ${pairedPrevious.text}`);
             await forwardReply(pairedPrevious.text);
             lastForwarded = { text: pairedPrevious.text, time: record.time };
             await sayViaXiaoAi("已发送到 Codex");
