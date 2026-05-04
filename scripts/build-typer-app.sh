@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 APP_NAME="小爱Codex输入助手.app"
-APP_PATH="$ROOT_DIR/.data/apps/$APP_NAME"
+APP_PATH="$HOME/Desktop/$APP_NAME"
 EXECUTABLE="小爱Codex输入助手"
 ICON="$ROOT_DIR/assets/xiaoai-codex.icns"
 
@@ -39,6 +39,8 @@ cat > "$APP_PATH/Contents/Info.plist" <<PLIST
   <string>1.0</string>
   <key>CFBundleVersion</key>
   <string>1</string>
+  <key>LSUIElement</key>
+  <true/>
 </dict>
 </plist>
 PLIST

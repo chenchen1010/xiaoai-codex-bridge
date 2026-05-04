@@ -44,6 +44,15 @@ function run(command, args, input) {
   });
 }
 
+function resolveTyperCommand(typerPath) {
+  if (!typerPath.endsWith(".app")) {
+    return typerPath;
+  }
+
+  const appName = path.basename(typerPath, ".app");
+  return path.join(typerPath, "Contents", "MacOS", appName);
+}
+
 async function saveReply(text) {
   await fs.mkdir(path.dirname(logPath), { recursive: true });
   await fs.appendFile(logPath, `${new Date().toISOString()}\t${text}\n`);
@@ -52,12 +61,9 @@ async function saveReply(text) {
 
   if (replyMode === "paste" || replyMode === "submit") {
     if (typerApp && replyMode === "submit") {
-      if (typerApp.endsWith(".app")) {
-        await run("/usr/bin/open", ["-W", "-n", "-a", typerApp, "--args", text], "");
-      } else {
-        await run(typerApp, [text], "");
-      }
-      await log(`submitted via typer ${typerApp}`);
+      const typerCommand = resolveTyperCommand(typerApp);
+      await run(typerCommand, [text], "");
+      await log(`submitted via typer ${typerCommand}`);
       return;
     }
 

@@ -21,8 +21,8 @@ function start(name, args) {
   child.stderr.on("data", (chunk) => process.stderr.write(`[${name}] ${chunk}`));
   child.on("exit", (code, signal) => {
     console.error(`[${name}] exited: ${signal || code}`);
-    process.exitCode = 1;
     shutdown();
+    process.exit(1);
   });
 
   return child;

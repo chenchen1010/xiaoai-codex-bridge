@@ -196,7 +196,7 @@ npm run typer:build
 If auto-submit is blocked by macOS Accessibility permissions, grant Accessibility permission to `小爱Codex输入助手.app`, then set:
 
 ```env
-VOICE_REPLY_TYPER_APP=/path/to/xiaoai-codex-bridge/.data/apps/小爱Codex输入助手.app
+VOICE_REPLY_TYPER_APP=/Users/you/Desktop/小爱Codex输入助手.app
 ```
 
 ## Logs
